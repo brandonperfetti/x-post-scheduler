@@ -10,7 +10,8 @@ const BasicAuthToken = Buffer.from(
 const twitterOauthTokenParams = {
 	client_id: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID!,
 	code_verifier: '8KxxO-RPl0bLSxX5AWwgdiFbMnry_VOKzFeIlVA7NoA',
-	redirect_uri: `http://www.localhost:3000/dashboard`,
+	// redirect_uri: `http://www.localhost:3000/dashboard`,
+	redirect_uri: `https://x-post-scheduler-rfe3.vercel.app/dashboard`,
 	grant_type: 'authorization_code',
 }
 

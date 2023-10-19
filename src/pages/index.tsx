@@ -10,7 +10,8 @@ export default function Home() {
 	const getTwitterOauthUrl = () => {
 		const rootUrl = 'https://twitter.com/i/oauth2/authorize'
 		const options = {
-			redirect_uri: 'http://www.localhost:3000/dashboard',
+			// redirect_uri: 'http://www.localhost:3000/dashboard',
+			redirect_uri: 'https://x-post-scheduler-rfe3.vercel.app/dashboard',
 			client_id: process.env.NEXT_PUBLIC_TWITTER_CLIENT_ID!,
 			state: 'state',
 			response_type: 'code',
