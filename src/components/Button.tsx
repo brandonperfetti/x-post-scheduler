@@ -173,4 +173,6 @@ const Button = forwardRef<ElementType, ButtonProps<ElementType>>(
 	},
 )
 
+Button.displayName = 'Button';
+
 export default Button
