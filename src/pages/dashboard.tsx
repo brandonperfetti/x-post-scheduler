@@ -160,7 +160,7 @@ const Dashboard = () => {
 				setError((err as Error).message)
 			}
 		},
-		[timeZone],
+		[],
 	)
 
 	useEffect(() => {
