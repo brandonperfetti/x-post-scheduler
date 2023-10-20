@@ -55,11 +55,12 @@ const Dashboard = () => {
 		setWeekOffset(0)
 	}
 
+	// Get the user's time zone
+	const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
+	// console.log('Time zone:', timeZone)
+
 	const handleAddEvent = useCallback(
 		(id: number, time: number) => {
-			// Get the user's time zone
-			const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
-
 			// Construct a string representing the selected date and time in the user's time zone
 			const selectedDateTimeStr = `${weekDates[id]}T${String(time).padStart(
 				2,
@@ -120,40 +121,47 @@ const Dashboard = () => {
 		window.location.href = '/'
 	}
 
-	const sendAuthRequest = useCallback(async (code: string | null) => {
-		if (!code) {
-			console.error('Code is missing or null')
-			return
-		}
-		try {
-			const request = await fetch('/api/twitter/auth', {
-				method: 'POST',
-				body: JSON.stringify({ code }),
-				headers: {
-					'Content-Type': 'application/json',
-				},
-			})
-			if (!request.ok) {
-				throw new Error(`Server responded with ${request.status}`)
+	const sendAuthRequest = useCallback(
+		async (code: string | null, timeZone: string) => {
+			if (!code) {
+				console.error('Code is missing or null')
+				return
 			}
-			const response = await request.json()
-			if (response.token_type && response.data.username) {
-				localStorage.setItem('username', response.data.username)
-				setUsername(response.data.username)
-			} else {
-				throw new Error('Unexpected response format')
+			if (!timeZone) {
+				console.error('timeZone is missing or null')
+				return
 			}
-		} catch (err) {
-			console.error('Error:', err)
-			console.error(
-				'Error details:',
-				(err as any).response
-					? await (err as any).response.json()
-					: 'No response',
-			)
-			setError((err as Error).message)
-		}
-	}, [])
+			try {
+				const request = await fetch('/api/twitter/auth', {
+					method: 'POST',
+					body: JSON.stringify({ code, timeZone }),
+					headers: {
+						'Content-Type': 'application/json',
+					},
+				})
+				if (!request.ok) {
+					throw new Error(`Server responded with ${request.status}`)
+				}
+				const response = await request.json()
+				if (response.token_type && response.data.username) {
+					localStorage.setItem('username', response.data.username)
+					setUsername(response.data.username)
+				} else {
+					throw new Error('Unexpected response format')
+				}
+			} catch (err) {
+				console.error('Error:', err)
+				console.error(
+					'Error details:',
+					(err as any).response
+						? await (err as any).response.json()
+						: 'No response',
+				)
+				setError((err as Error).message)
+			}
+		},
+		[],
+	)
 
 	useEffect(() => {
 		const fetchAndSetSchedule = async () => {
@@ -171,7 +179,7 @@ const Dashboard = () => {
 				const params = new URL(window.location.href).searchParams
 				const code = params.get('code')
 				if (code) {
-					await sendAuthRequest(code)
+					await sendAuthRequest(code, timeZone)
 					const updatedUserName = localStorage.getItem('username')
 					if (updatedUserName) {
 						try {

@@ -1,6 +1,7 @@
 import { client } from '@/trigger'
 import { cronTrigger } from '@trigger.dev/sdk'
 import { Supabase } from '@trigger.dev/supabase'
+import { utcToZonedTime } from 'date-fns-tz'
 
 const supabase = new Supabase({
 	id: 'supabase',
@@ -17,6 +18,13 @@ client.defineJob({
 		cron: '* * * * *',
 	}),
 	run: async (payload, io, ctx) => {
+		const currentMinute = new Date()
+		currentMinute.setSeconds(0)
+		currentMinute.setMilliseconds(0)
+
+		const nextMinute = new Date(currentMinute)
+		nextMinute.setMinutes(currentMinute.getMinutes() + 1)
+
 		await io.logger.info('Job started! 🌟')
 
 		const { data, error } = await io.supabase.runTask(
@@ -24,9 +32,8 @@ client.defineJob({
 			async db => {
 				return await db
 					.from('schedule_posts')
-					.select(`*, users (username, accessToken)`)
+					.select(`*, users (username, accessToken, timezone)`)
 					.eq('published', false)
-					.lt('timestamp', new Date().toISOString())
 			},
 		)
 
@@ -34,6 +41,19 @@ client.defineJob({
 
 		if (data) {
 			for (let i = 0; i < data?.length; i++) {
+				const userTimeZone = data?.[i].users.timezone
+				const currentMinuteUserTime = utcToZonedTime(
+					currentMinute,
+					userTimeZone,
+				)
+				const nextMinuteUserTime = utcToZonedTime(nextMinute, userTimeZone)
+
+				const scheduleData = data.filter(
+					post =>
+						post.timestamp >= currentMinuteUserTime.toISOString() &&
+						post.timestamp < nextMinuteUserTime.toISOString(),
+				)
+
 				try {
 					const postTweet = await fetch('https://api.twitter.com/2/tweets', {
 						method: 'POST',
@@ -41,7 +61,7 @@ client.defineJob({
 							'Content-type': 'application/json',
 							Authorization: `Bearer ${data?.[i].users.accessToken}`,
 						},
-						body: JSON.stringify({ text: data?.[i].content }),
+						body: JSON.stringify({ text: scheduleData?.[i].content }),
 					})
 
 					if (!postTweet.ok) {
