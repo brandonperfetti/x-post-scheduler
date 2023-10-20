@@ -32,26 +32,39 @@ client.defineJob({
 
 		await io.logger.info(JSON.stringify(data))
 
-		// @ts-ignore
-		for (let i = 0; i < data?.length; i++) {
-			try {
-				const postTweet = await fetch('https://api.twitter.com/2/tweets', {
-					method: 'POST',
-					headers: {
-						'Content-type': 'application/json',
-						Authorization: `Bearer ${data?.[i].users.accessToken}`,
-					},
-					body: JSON.stringify({ text: data?.[i].content }),
-				})
-				const getResponse = await postTweet.json()
-				await io.logger.info(`${i}`)
-				await io.logger.info(
-					`Tweet created successfully!${i} - ${getResponse.data}`,
-				)
-			} catch (err) {
-				// @ts-ignore
-				await io.logger.error(err)
+		if (data) {
+			for (let i = 0; i < data?.length; i++) {
+				try {
+					const postTweet = await fetch('https://api.twitter.com/2/tweets', {
+						method: 'POST',
+						headers: {
+							'Content-type': 'application/json',
+							Authorization: `Bearer ${data?.[i].users.accessToken}`,
+						},
+						body: JSON.stringify({ text: data?.[i].content }),
+					})
+
+					if (!postTweet.ok) {
+						const errorResponse = await postTweet.json()
+						throw new Error(
+							`Failed to post tweet: ${postTweet.status} - ${JSON.stringify(
+								errorResponse,
+							)}`,
+						)
+					}
+
+					const getResponse = await postTweet.json()
+					await io.logger.info(
+						`Tweet created successfully!${i} - ${JSON.stringify(
+							getResponse.data,
+						)}`,
+					)
+				} catch (err) {
+					await io.logger.error((err as Error).message)
+				}
 			}
+		} else {
+			await io.logger.error('No data found')
 		}
 	},
 })
