@@ -89,7 +89,7 @@ const Dashboard = () => {
 			})
 			setAddEventModal(true)
 		},
-		[weekDates],
+		[weekDates, timeZone],
 	)
 
 	const handleDeleteEvent = useCallback(
@@ -160,7 +160,7 @@ const Dashboard = () => {
 				setError((err as Error).message)
 			}
 		},
-		[],
+		[timeZone],
 	)
 
 	useEffect(() => {
@@ -195,7 +195,7 @@ const Dashboard = () => {
 		}
 
 		fetchAndSetSchedule()
-	}, [sendAuthRequest])
+	}, [sendAuthRequest, timeZone])
 
 	const fetchAndSetSchedule = async () => {
 		setIsLoading(true)
