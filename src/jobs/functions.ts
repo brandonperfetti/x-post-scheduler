@@ -14,6 +14,7 @@ client.defineJob({
 	name: 'Post Schedule',
 	integrations: { supabase },
 	version: '0.0.1',
+	enabled: false,
 	trigger: cronTrigger({
 		cron: '* * * * *',
 	}),
