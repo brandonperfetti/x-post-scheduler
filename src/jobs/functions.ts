@@ -14,7 +14,7 @@ client.defineJob({
 	name: 'Post Schedule',
 	integrations: { supabase },
 	version: '0.0.1',
-	enabled: false,
+	enabled: process.env.TRIGGER_JOBS_DISABLED !== "true",
 	trigger: cronTrigger({
 		cron: '* * * * *',
 	}),
